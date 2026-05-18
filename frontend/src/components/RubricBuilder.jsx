@@ -613,15 +613,16 @@ export default function RubricBuilder({ onSubmit, isProcessing }) {
 
   const handleSubmit = () => {
     if (isSubmitting) return
+    // Validate PDF before locking UI — prevents infinite freeze
+    if (!examFile) {
+      alert('Please attach a scanned PDF before submitting.')
+      return
+    }
     setIsSubmitting(true)
     const schema = buildSchema()
     console.log('════════════ GradeOps · Exam Paper Schema ════════════')
     console.log(JSON.stringify(schema, null, 2))
-    if (examFile) {
-      console.log('📎 Attached scan file:', examFile.name, `(${(examFile.size / 1024 / 1024).toFixed(2)} MB)`)
-    } else {
-      console.log('📎 No scan file attached.')
-    }
+    console.log('📎 Attached scan file:', examFile.name, `(${(examFile.size / 1024 / 1024).toFixed(2)} MB)`)
     console.log('══════════════════════════════════════════════════════')
     // Pass schema + file to parent — parent handles fetch & UI transition
     onSubmit?.(schema, examFile)

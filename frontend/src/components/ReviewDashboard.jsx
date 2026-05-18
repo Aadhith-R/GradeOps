@@ -95,8 +95,6 @@ function LoadingView({ processingLogs }) {
 
 function DashboardView({ dashboardData, setDashboardData, currentIndex, setCurrentIndex }) {
   const [openQ, setOpenQ] = useState({ 0: true })
-  const [overrideScore, setOverrideScore] = useState('')
-  const [savedFeedback, setSavedFeedback] = useState(false)
   const overrideRef = useRef(null)
 
   const allDone = currentIndex >= dashboardData.length
@@ -109,18 +107,26 @@ function DashboardView({ dashboardData, setDashboardData, currentIndex, setCurre
     console.log('✅ [GradeOps] Grade APPROVED —', `Student: ${student.student_id}`, `| Score: ${student.overall_paper_score} / ${student.maximum_paper_marks}`)
     setCurrentIndex(i => i + 1)
     setOpenQ({ 0: true })
-    setOverrideScore('')
   }
 
-  const handleSaveOverride = () => {
-    if (overrideScore === '' || allDone) return
-    const newScore = Number(overrideScore)
-    console.log('✏️ [GradeOps] Manual override saved —', `Student: ${student.student_id}`, `| New score: ${newScore}`)
-    setDashboardData(prev => prev.map((s, i) =>
-      i === currentIndex ? { ...s, overall_paper_score: newScore } : s
-    ))
-    setSavedFeedback(true)
-    setTimeout(() => setSavedFeedback(false), 2000)
+  // Granular per-criteria score edit: recalculates question + overall totals reactively
+  const handleCriteriaScoreChange = (studentId, questionId, criteriaIndex, newVal) => {
+    const newScore = Math.max(0, Number(newVal))
+    setDashboardData(prev => prev.map(s => {
+      if (s.student_id !== studentId) return s
+      const updatedQuestions = s.question_results.map(q => {
+        if (q.question_id !== questionId) return q
+        const updatedBreakdown = q.grading_breakdown.map((row, ri) =>
+          ri === criteriaIndex
+            ? { ...row, points_awarded: Math.min(newScore, row.max_points ?? Infinity) }
+            : row
+        )
+        const newQuestionScore = updatedBreakdown.reduce((sum, r) => sum + r.points_awarded, 0)
+        return { ...q, grading_breakdown: updatedBreakdown, score_awarded: newQuestionScore }
+      })
+      const newOverall = updatedQuestions.reduce((sum, q) => sum + q.score_awarded, 0)
+      return { ...s, question_results: updatedQuestions, overall_paper_score: newOverall }
+    }))
   }
 
   // Keyboard shortcuts — deps include handleApprove/overrideRef to avoid stale closure
@@ -338,9 +344,21 @@ function DashboardView({ dashboardData, setDashboardData, currentIndex, setCurre
                               <tr key={ri} className="border-t border-slate-800 hover:bg-slate-800/30 transition-colors">
                                 <td className="px-4 py-3 text-slate-300 text-xs leading-relaxed">{row.criteria}</td>
                                 <td className="px-4 py-3 text-center">
-                                  <span className="inline-block bg-blue-600/20 text-blue-300 border border-blue-500/20 rounded-lg px-2 py-0.5 text-xs font-mono font-semibold">
-                                    +{row.points_awarded}
-                                  </span>
+                                  <input
+                                    type="number"
+                                    min={0}
+                                    max={row.max_points ?? q.max_question_score}
+                                    step={0.5}
+                                    value={row.points_awarded}
+                                    onChange={e => handleCriteriaScoreChange(
+                                      student.student_id,
+                                      q.question_id,
+                                      ri,
+                                      e.target.value
+                                    )}
+                                    onClick={e => e.stopPropagation()}
+                                    className="w-16 text-center bg-slate-800 border border-blue-500/30 text-blue-300 rounded-lg px-2 py-0.5 text-xs font-mono font-semibold focus:outline-none focus:ring-1 focus:ring-blue-500/60 transition-all"
+                                  />
                                 </td>
                                 <td className="px-4 py-3 text-slate-400 text-xs leading-relaxed">{row.notes}</td>
                               </tr>
@@ -380,57 +398,6 @@ function DashboardView({ dashboardData, setDashboardData, currentIndex, setCurre
               <kbd className="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-slate-500 font-mono">⇧ A</kbd>
             </span> */}
 
-            {/* Divider */}
-            <div className="h-7 w-px bg-slate-800 mx-1" />
-
-            {/* Manual Override */}
-            <div className="flex items-center gap-2 flex-1">
-              <div className="relative">
-                <input
-                  id="override-input"
-                  ref={overrideRef}
-                  type="number"
-                  min="0"
-                  max={student?.maximum_paper_marks}
-                  step="0.5"
-                  value={overrideScore}
-                  onChange={e => setOverrideScore(e.target.value)}
-                  placeholder={`Override score (max ${student?.maximum_paper_marks ?? '?'})`}
-                  className="
-                    bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100
-                    placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-500/50
-                    focus:border-amber-600/60 transition-all w-56
-                  "
-                />
-              </div>
-              <button
-                title="(Shift + O)"
-                id="save-override-btn"
-                type="button"
-                onClick={handleSaveOverride}
-                disabled={overrideScore === ''}
-                className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold border transition-all disabled:opacity-30 disabled:cursor-not-allowed ${savedFeedback ? 'text-green-300 bg-green-600/10 border-green-500/30' : 'text-amber-300 bg-amber-600/10 hover:bg-amber-600/20 border-amber-500/30'}`}
-              >
-                {savedFeedback ? (
-                  <>
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                    </svg>
-                    SAVED!
-                  </>
-                ) : (
-                  <>
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-                    </svg>
-                    SAVE
-                  </>
-                )}
-              </button>
-              {/* <span className="text-xs text-slate-700 hidden sm:block">
-                <kbd className="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-slate-500 font-mono">⇧ O</kbd> to focus
-              </span> */}
-            </div>
           </div>
         </div>
       </div>

@@ -36,11 +36,13 @@ const generateStressTestData = () => {
           {
             criteria: `Addresses core concept for Question ${q}`,
             points_awarded: Math.min(score, 3.0),
+            max_points: 3.0,
             notes: score >= 3 ? 'Excellent core understanding.' : 'Missed foundational details.',
           },
           {
             criteria: 'Provides supporting evidence',
             points_awarded: Math.max(0, score - 3.0),
+            max_points: 2.0,
             notes: score === 5 ? 'Great examples and depth.' : 'Lacks sufficient elaboration.',
           },
         ],
@@ -303,11 +305,6 @@ function App() {
 
   // ── Primary submission handler ────────────────────────────────────────────
   const startProcessing = useCallback(async (examPayload, examFile) => {
-    if (!examFile) {
-      alert("Please attach a scanned PDF before submitting.");
-      return;
-    }
-
     // Switch to dashboard loading state immediately
     setActiveView('dashboard')
     setIsProcessing(true)
@@ -352,19 +349,22 @@ function App() {
       />
 
       <main className="flex-1 ml-64 flex flex-col overflow-hidden">
-        {activeView === 'builder' ? (
-          <div className="flex-1 overflow-y-auto bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-            <div className="max-w-4xl mx-auto px-8 py-10">
-              <div className="mb-8">
-                <h1 className="text-3xl font-bold text-white tracking-tight">GRADING RUBRIC</h1>
-                <p className="text-slate-500 text-sm mt-1.5">
-                  Configure exam papers and generate evaluation schema JSON.
-                </p>
-              </div>
-              <RubricBuilder key={resetCounter} onSubmit={startProcessing} isProcessing={isProcessing} />
+
+        {/* Rubric Builder — always mounted, hidden via CSS when not active */}
+        <div className={activeView === 'builder' ? 'flex-1 overflow-y-auto bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950' : 'hidden'}>
+          <div className="max-w-4xl mx-auto px-8 py-10">
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold text-white tracking-tight">GRADING RUBRIC</h1>
+              <p className="text-slate-500 text-sm mt-1.5">
+                Configure exam papers and generate evaluation schema JSON.
+              </p>
             </div>
+            <RubricBuilder key={resetCounter} onSubmit={startProcessing} isProcessing={isProcessing} />
           </div>
-        ) : (
+        </div>
+
+        {/* Review Dashboard — always mounted, hidden via CSS when not active */}
+        <div className={activeView !== 'builder' ? 'flex-1 flex flex-col overflow-hidden' : 'hidden'}>
           <ReviewDashboard
             isProcessing={isProcessing}
             processingLogs={processingLogs}
@@ -373,7 +373,8 @@ function App() {
             currentIndex={currentIndex}
             setCurrentIndex={setCurrentIndex}
           />
-        )}
+        </div>
+
       </main>
     </div>
   )
