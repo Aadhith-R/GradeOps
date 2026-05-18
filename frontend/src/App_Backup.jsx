@@ -15,62 +15,50 @@ const MOCK_LOGS = [
   '[Status] ✓ Pipeline finished. Ready for TA review.',
 ]
 
-// ── Stress-Test Data Generator ────────────────────────────────────────────────
-const generateStressTestData = () => {
-  const students = []
-  for (let i = 1; i <= 15; i++) {
-    const studentId = `STU_${i.toString().padStart(3, '0')}`
-    let overallScore = 0
-    const questions = []
-
-    for (let q = 1; q <= 5; q++) {
-      const score = Math.floor(Math.random() * 6) // 0 to 5
-      overallScore += score
-      const isPlagiarized = Math.random() > 0.85 // ~15% chance
-
-      questions.push({
-        question_id: `Q_${q}`,
-        score_awarded: score,
+// ── Lifted Mock Data ──────────────────────────────────────────────────────────
+const INITIAL_MOCK_OUTPUT = [
+  {
+    student_id: 'STU_404',
+    paper_id: 'EXAM_FINAL_01',
+    overall_paper_score: 3.0,
+    maximum_paper_marks: 5.0,
+    question_results: [
+      {
+        question_id: 'Q_101',
+        question_text: 'Explain the process of cellular respiration and the role of ATP.',
+        score_awarded: 3.0,
+        max_question_score: 5.0,
+        grading_breakdown: [{ criteria: 'Mentions ATP production', points_awarded: 3.0, notes: 'Student correctly explained ATP synthesis.' }],
+        format_check_passed: true,
+        justification: 'The core concept was correct, but missed secondary terminology.',
+        plagiarism_flag: true,
+        plagiarism_details: { matched_with: ['STU_102'], similarity_score: 0.85 },
+      },
+    ],
+  },
+  {
+    student_id: 'STU_405',
+    paper_id: 'EXAM_FINAL_01',
+    overall_paper_score: 5.0,
+    maximum_paper_marks: 5.0,
+    question_results: [
+      {
+        question_id: 'Q_101',
+        question_text: 'Explain the process of cellular respiration and the role of ATP.',
+        score_awarded: 5.0,
         max_question_score: 5.0,
         grading_breakdown: [
-          {
-            criteria: `Addresses core concept for Question ${q}`,
-            points_awarded: Math.min(score, 3.0),
-            notes: score >= 3 ? 'Excellent core understanding.' : 'Missed foundational details.',
-          },
-          {
-            criteria: 'Provides supporting evidence',
-            points_awarded: Math.max(0, score - 3.0),
-            notes: score === 5 ? 'Great examples and depth.' : 'Lacks sufficient elaboration.',
-          },
+          { criteria: 'Mentions ATP production', points_awarded: 3.0, notes: 'Clear and precise explanation of ATP synthesis.' },
+          { criteria: 'Mentions secondary terminology (e.g., mitochondria)', points_awarded: 2.0, notes: 'Correctly identified the mitochondria as the powerhouse.' },
         ],
-        format_check_passed: score > 2,
-        justification:
-          score === 5
-            ? 'Flawless execution of the prompt.'
-            : 'Needs review on secondary concepts. Refer to grading breakdown.',
-        plagiarism_flag: isPlagiarized,
-        plagiarism_details: {
-          matched_with: isPlagiarized ? [`STU_${Math.floor(Math.random() * 15) + 1}`] : [],
-          similarity_score: isPlagiarized
-            ? parseFloat((0.85 + Math.random() * 0.1).toFixed(2))
-            : 0.0,
-        },
-      })
-    }
-
-    students.push({
-      student_id: studentId,
-      paper_id: 'EXAM_STRESS_TEST_01',
-      overall_paper_score: overallScore,
-      maximum_paper_marks: 25.0, // 5 questions × 5 max marks
-      question_results: questions,
-    })
-  }
-  return students
-}
-
-const INITIAL_MOCK_OUTPUT = generateStressTestData()
+        format_check_passed: true,
+        justification: 'Perfect answer. Covered all required concepts and terminology clearly.',
+        plagiarism_flag: false,
+        plagiarism_details: { matched_with: [], similarity_score: 0.0 },
+      },
+    ],
+  },
+]
 
 // ── Sidebar Data ──────────────────────────────────────────────────────────────
 const RECENT_PAPERS = [
@@ -81,7 +69,7 @@ const RECENT_PAPERS = [
 ]
 
 // ── Sidebar ───────────────────────────────────────────────────────────────────
-function Sidebar({ activeView, setActiveView, dashboardData, currentIndex, setCurrentIndex, onReset }) {
+function Sidebar({ activeView, setActiveView, dashboardData, currentIndex, setCurrentIndex }) {
   const pending = dashboardData.length - currentIndex
 
   const navItem = (view, icon, label, badge) => {
@@ -134,7 +122,7 @@ function Sidebar({ activeView, setActiveView, dashboardData, currentIndex, setCu
         <button
           id="new-paper-btn"
           type="button"
-          onClick={onReset}
+          onClick={() => setActiveView('builder')}
           className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-blue-600 hover:bg-blue-500 active:scale-[0.98] shadow-md shadow-blue-600/20 transition-all duration-150"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -239,7 +227,7 @@ function Sidebar({ activeView, setActiveView, dashboardData, currentIndex, setCu
 
       {/* Bottom: Settings + Profile */}
       <div className="px-3 py-3 border-t border-slate-800/70 space-y-0.5">
-        <button id="settings-btn" type="button" title="Coming Soon..."
+        <button id="settings-btn" type="button"
           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-slate-400 hover:text-white hover:bg-slate-800/70 transition-all group">
           <svg className="w-4 h-4 shrink-0 text-slate-600 group-hover:text-slate-300 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -248,12 +236,12 @@ function Sidebar({ activeView, setActiveView, dashboardData, currentIndex, setCu
           </svg>
           Settings
         </button>
-        <button id="profile-btn" type="button" title="Coming Soon..."
+        <button id="profile-btn" type="button"
           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-800/70 transition-all group">
           <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shrink-0 text-xs font-bold text-white shadow">A</div>
           <div className="text-left min-w-0">
-            <p className="text-sm text-slate-300 group-hover:text-white truncate transition-colors leading-tight">John Smith</p>
-            <p className="text-xs text-slate-600 truncate">Teacher</p>
+            <p className="text-sm text-slate-300 group-hover:text-white truncate transition-colors leading-tight">Aadhith</p>
+            <p className="text-xs text-slate-600 truncate">Student · Free Plan</p>
           </div>
         </button>
       </div>
@@ -266,70 +254,42 @@ function App() {
   const [activeView, setActiveView]         = useState('builder')
   const [isProcessing, setIsProcessing]     = useState(false)
   const [processingLogs, setProcessingLogs] = useState([])
-  const [dashboardData, setDashboardData]   = useState([])
+  const [dashboardData, setDashboardData]   = useState(INITIAL_MOCK_OUTPUT)
   const [currentIndex, setCurrentIndex]     = useState(0)
-  const [resetCounter, setResetCounter]     = useState(0)
 
   // ── Mock streaming fallback ────────────────────────────────────────────────
   const runMockStream = useCallback(() => {
     let idx = 0
-    // I sped this up from 7500ms to 800ms so you don't fall asleep testing UI!
     const iv = setInterval(() => {
-      setProcessingLogs(prev => {
-        if (idx < MOCK_LOGS.length) return [...prev, MOCK_LOGS[idx]]
-        return prev
-      })
+      setProcessingLogs(prev => [...prev, MOCK_LOGS[idx]])
       idx++
       if (idx >= MOCK_LOGS.length) clearInterval(iv)
-    }, 800) 
-
+    }, 7500)
     setTimeout(() => {
       clearInterval(iv)
       setIsProcessing(false)
-      // THIS is what was missing! Inject the dummy data into the dashboard.
-      setDashboardData(INITIAL_MOCK_OUTPUT)
-    }, 7000) 
-  }, [])
-
-  // ── Global reset handler ───────────────────────────────────────────────────
-  const handleReset = useCallback(() => {
-    setActiveView('builder')
-    setIsProcessing(false)
-    setProcessingLogs([])
-    setDashboardData([])
-    setCurrentIndex(0)
-    setResetCounter(c => c + 1)  // forces RubricBuilder unmount+remount via key prop
+    }, 30000)
   }, [])
 
   // ── Primary submission handler ────────────────────────────────────────────
   const startProcessing = useCallback(async (examPayload, examFile) => {
-    if (!examFile) {
-      alert("Please attach a scanned PDF before submitting.");
-      return;
-    }
-
     // Switch to dashboard loading state immediately
     setActiveView('dashboard')
     setIsProcessing(true)
     setProcessingLogs([])
     setCurrentIndex(0)
 
-    // Build multipart payload matching teammate's EXACT specification
+    // Build multipart payload
     const formData = new FormData()
-    formData.append('student_id', 'STU_404') // Placeholder ID added
-    formData.append('paper_json', JSON.stringify(examPayload)) // Changed from rubric_json
-    formData.append('exam_pdf', examFile)
+    if (examFile) formData.append('exam_pdf', examFile)
+    formData.append('rubric_json', JSON.stringify(examPayload))
 
     try {
-      // Switched to new /grade-pdf endpoint
-      const res = await fetch('http://127.0.0.1:8000/grade-pdf', {
+      const res = await fetch('http://localhost:8000/grade', {
         method: 'POST',
         body: formData,
         // NOTE: Do NOT set Content-Type — browser must set multipart boundary
       })
-      
-      if (!res.ok) throw new Error("Backend connection failed")
-
       const data = await res.json()
       // Real backend response: update dashboard with live results
       setDashboardData(Array.isArray(data) ? data : [data])
@@ -348,7 +308,6 @@ function App() {
         dashboardData={dashboardData}
         currentIndex={currentIndex}
         setCurrentIndex={setCurrentIndex}
-        onReset={handleReset}
       />
 
       <main className="flex-1 ml-64 flex flex-col overflow-hidden">
@@ -356,12 +315,12 @@ function App() {
           <div className="flex-1 overflow-y-auto bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
             <div className="max-w-4xl mx-auto px-8 py-10">
               <div className="mb-8">
-                <h1 className="text-3xl font-bold text-white tracking-tight">GRADING RUBRIC</h1>
+                <h1 className="text-3xl font-bold text-white tracking-tight">Rubric Builder</h1>
                 <p className="text-slate-500 text-sm mt-1.5">
                   Configure exam papers and generate evaluation schema JSON.
                 </p>
               </div>
-              <RubricBuilder key={resetCounter} onSubmit={startProcessing} isProcessing={isProcessing} />
+              <RubricBuilder onSubmit={startProcessing} isProcessing={isProcessing} />
             </div>
           </div>
         ) : (

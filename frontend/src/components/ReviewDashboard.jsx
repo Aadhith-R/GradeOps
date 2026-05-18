@@ -363,6 +363,7 @@ function DashboardView({ dashboardData, setDashboardData, currentIndex, setCurre
             {/* Progress counter + Approve button */}
             <span className="text-xs text-slate-600 shrink-0 tabular-nums">{Math.min(currentIndex + 1, dashboardData.length)}/{dashboardData.length}</span>
             <button
+              title="(Shift + A)"
               id="approve-grade-btn"
               type="button"
               onClick={handleApprove}
@@ -372,11 +373,12 @@ function DashboardView({ dashboardData, setDashboardData, currentIndex, setCurre
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
               </svg>
-              Approve &amp; Next Student
+              APPROVE
+              {/* Approve &amp; Next Student */}
             </button>
-            <span className="text-xs text-slate-700 hidden sm:block">
+            {/* <span className="text-xs text-slate-700 hidden sm:block">
               <kbd className="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-slate-500 font-mono">⇧ A</kbd>
-            </span>
+            </span> */}
 
             {/* Divider */}
             <div className="h-7 w-px bg-slate-800 mx-1" />
@@ -402,6 +404,7 @@ function DashboardView({ dashboardData, setDashboardData, currentIndex, setCurre
                 />
               </div>
               <button
+                title="(Shift + O)"
                 id="save-override-btn"
                 type="button"
                 onClick={handleSaveOverride}
@@ -413,20 +416,20 @@ function DashboardView({ dashboardData, setDashboardData, currentIndex, setCurre
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                     </svg>
-                    Saved!
+                    SAVED!
                   </>
                 ) : (
                   <>
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
                     </svg>
-                    Save
+                    SAVE
                   </>
                 )}
               </button>
-              <span className="text-xs text-slate-700 hidden sm:block">
+              {/* <span className="text-xs text-slate-700 hidden sm:block">
                 <kbd className="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-slate-500 font-mono">⇧ O</kbd> to focus
-              </span>
+              </span> */}
             </div>
           </div>
         </div>
@@ -441,6 +444,27 @@ export default function ReviewDashboard({ isProcessing, processingLogs, dashboar
   if (isProcessing) {
     return <LoadingView processingLogs={processingLogs} />
   }
+
+  // Empty state: no results yet (fresh session or after reset)
+  if (!dashboardData || dashboardData.length === 0) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center gap-5 bg-slate-950 text-center px-8">
+        <div className="w-16 h-16 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center">
+          <svg className="w-8 h-8 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+          </svg>
+        </div>
+        <div>
+          <h3 className="text-lg font-bold text-slate-300">No Results Yet</h3>
+          <p className="text-sm text-slate-600 mt-1 max-w-xs">
+            Submit a paper in the Rubric Builder to see AI grading results here.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <DashboardView
       dashboardData={dashboardData}

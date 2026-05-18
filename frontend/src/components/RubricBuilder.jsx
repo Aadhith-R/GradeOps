@@ -15,9 +15,9 @@ const ANSWER_FMTS   = ['step_wise', 'keyword', 'descriptive']
 let _uid = 0
 const uid = () => ++_uid
 const mkCond = ()     => ({ id: uid(), criteria: '', points: '' })
-const mkQuestion = () => ({
+const mkQuestion = (defaultId = '') => ({
   id: uid(), collapsed: false,
-  question_id: '', question_text: '', max_score: '',
+  question_id: defaultId, question_text: '', max_score: '',
   question_type: 'stem',
   evaluation_config: { ...PRESETS.stem.config },
   conditions: [mkCond()],
@@ -90,10 +90,35 @@ function Toggle({ checked, onChange, label }) {
 // ── EvalConfig: badges (preset) or editable controls (custom) ─────────────────
 
 function EvalConfigSection({ isCustom, config, onChange }) {
+  
+  // 1. Translate the ugly snake_case keys into human-readable labels
+  const keyFormatter = {
+    answer_format: "FORMAT",
+    sentence_formation_required: "FULL SENTENCES",
+    partial_credit_enabled: "PARTIAL CREDIT",
+    strict_ordering: "STRICT ORDER"
+  };
+
+  // 2. Translate the values (turning booleans into Yes/No, and cleaning up strings)
+  const valueFormatter = (val) => {
+    if (typeof val === 'boolean') return val ? 'Yes' : 'No';
+    if (val === 'step_wise') return 'Step-by-Step';
+    if (val === 'bullet_points') return 'Bullets';
+    if (val === 'keyword') return 'Keyword';
+    if (val === 'descriptive') return 'Descriptive';
+    return val; // Fallback for anything else
+  };
+
   if (!isCustom) {
     return (
       <div className="flex flex-wrap gap-2 mt-2.5">
-        {Object.entries(config).map(([k, v]) => <ReadonlyPill key={k} label={k} value={v} />)}
+        {Object.entries(config).map(([k, v]) => (
+          <ReadonlyPill 
+            key={k} 
+            label={keyFormatter[k] || k} 
+            value={valueFormatter(v)} 
+          />
+        ))}
       </div>
     )
   }
@@ -111,8 +136,8 @@ function EvalConfigSection({ isCustom, config, onChange }) {
         </select>
       </div>
       <Toggle checked={config.sentence_formation_required} onChange={v => onChange('sentence_formation_required', v)} label="Sentence Formation Required" />
-      <Toggle checked={config.partial_credit_enabled}       onChange={v => onChange('partial_credit_enabled', v)}      label="Partial Credit Enabled" />
-      <Toggle checked={config.strict_ordering}              onChange={v => onChange('strict_ordering', v)}             label="Strict Step Ordering" />
+      <Toggle checked={config.partial_credit_enabled}      onChange={v => onChange('partial_credit_enabled', v)}      label="Partial Credit Enabled" />
+      <Toggle checked={config.strict_ordering}             onChange={v => onChange('strict_ordering', v)}             label="Strict Step Ordering" />
     </div>
   )
 }
@@ -255,7 +280,7 @@ function QuestionCard({ question, index, onUpdate, onRemove }) {
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
               </svg>
-              {question.showSolution ? '− Hide Reference Solution' : '+ Add Reference Solution (Optional)'}
+              {question.showSolution ? '− Hide Solution' : '+ Add Solution (Optional)'}
             </button>
 
             {question.showSolution && (
@@ -353,8 +378,8 @@ function PaperDetailsCard({ paperId, domain, totalQ, maxMarks, onIdChange, onDom
     <div className="bg-slate-900/80 backdrop-blur-sm border border-slate-700/50 rounded-2xl shadow-xl shadow-black/30 overflow-hidden">
       <div className="px-7 py-4 border-b border-slate-700/50 bg-gradient-to-r from-blue-900/20 to-slate-800/20 flex items-center gap-2">
         <span className="w-2 h-2 rounded-full bg-blue-400" />
-        <h2 className="text-base font-bold text-white">Paper Details</h2>
-        <span className="ml-auto text-xs text-slate-600">Top-level exam metadata</span>
+        <h2 className="text-base font-bold text-white">PAPER DETAILS</h2>
+        {/* <span className="ml-auto text-xs text-slate-600">Top-level exam metadata</span> */}
       </div>
       <div className="px-7 py-5 grid grid-cols-2 gap-5">
         <div>
@@ -550,7 +575,8 @@ function UploadModal({ onClose, onAttach }) {
 export default function RubricBuilder({ onSubmit, isProcessing }) {
   const [paperId, setPaperId]             = useState('')
   const [domain, setDomain]               = useState('STEM')
-  const [questions, setQuestions]         = useState([mkQuestion()])
+  // 1. Initialize the first question as Q-1
+  const [questions, setQuestions]         = useState([mkQuestion('Q-1')])
   const [copied, setCopied]               = useState(false)
   const [isUploadModalOpen, setUploadModalOpen] = useState(false)
   const [examFile, setExamFile]           = useState(null)
@@ -559,7 +585,8 @@ export default function RubricBuilder({ onSubmit, isProcessing }) {
   const totalQ    = questions.length
   const maxMarks  = questions.reduce((s, q) => s + (Number(q.max_score) || 0), 0)
 
-  const addQuestion    = ()  => setQuestions(p => [...p, mkQuestion()])
+  // 2. Dynamically calculate the next Q-number based on array length
+  const addQuestion    = ()  => setQuestions(p => [...p, mkQuestion(`Q-${p.length + 1}`)])
   const removeQuestion = id  => setQuestions(p => p.length > 1 ? p.filter(q => q.id !== id) : p)
   const updateQuestion = (id, fn) => setQuestions(p => p.map(q => q.id === id ? fn(q) : q))
 
@@ -725,9 +752,9 @@ export default function RubricBuilder({ onSubmit, isProcessing }) {
         </button>
       </div>
 
-      <p className="text-center text-slate-600 text-xs">
+      {/* <p className="text-center text-slate-600 text-xs">
         Click <strong className="text-slate-500">Submit Paper &amp; Rubrics</strong> then open DevTools → Console to inspect the schema.
-      </p>
+      </p> */}
 
       {/* PDF Upload Modal */}
       {isUploadModalOpen && (
