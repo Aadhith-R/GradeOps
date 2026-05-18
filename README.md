@@ -13,4 +13,4 @@ uvicorn main:app --reload
 **2. Start the Frontend (React)**
 cd frontend
 npm install
-npm run dev
+npm run dev ""
