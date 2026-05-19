@@ -1,3 +1,7 @@
-langgraph
 fastapi
-torch
+uvicorn[standard]
+python-multipart
+pydantic
+google-genai
+pymongo
+PyMuPDF
