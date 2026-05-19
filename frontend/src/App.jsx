@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react'
 import './index.css'
 import RubricBuilder from './components/RubricBuilder'
 import ReviewDashboard from './components/ReviewDashboard'
+import { generateStressTestData } from './mockData'
 
 // ── Mock Pipeline Logs ────────────────────────────────────────────────────────
 const MOCK_LOGS = [
@@ -15,63 +16,6 @@ const MOCK_LOGS = [
   '[Status] ✓ Pipeline finished. Ready for TA review.',
 ]
 
-// ── Stress-Test Data Generator ────────────────────────────────────────────────
-const generateStressTestData = () => {
-  const students = []
-  for (let i = 1; i <= 15; i++) {
-    const studentId = `STU_${i.toString().padStart(3, '0')}`
-    let overallScore = 0
-    const questions = []
-
-    for (let q = 1; q <= 5; q++) {
-      const score = Math.floor(Math.random() * 6) // 0 to 5
-      overallScore += score
-      const isPlagiarized = Math.random() > 0.85 // ~15% chance
-
-      questions.push({
-        question_id: `Q_${q}`,
-        score_awarded: score,
-        max_question_score: 5.0,
-        grading_breakdown: [
-          {
-            criteria: `Addresses core concept for Question ${q}`,
-            points_awarded: Math.min(score, 3.0),
-            max_points: 3.0,
-            notes: score >= 3 ? 'Excellent core understanding.' : 'Missed foundational details.',
-          },
-          {
-            criteria: 'Provides supporting evidence',
-            points_awarded: Math.max(0, score - 3.0),
-            max_points: 2.0,
-            notes: score === 5 ? 'Great examples and depth.' : 'Lacks sufficient elaboration.',
-          },
-        ],
-        format_check_passed: score > 2,
-        justification:
-          score === 5
-            ? 'Flawless execution of the prompt.'
-            : 'Needs review on secondary concepts. Refer to grading breakdown.',
-        plagiarism_flag: isPlagiarized,
-        plagiarism_details: {
-          matched_with: isPlagiarized ? [`STU_${Math.floor(Math.random() * 15) + 1}`] : [],
-          similarity_score: isPlagiarized
-            ? parseFloat((0.85 + Math.random() * 0.1).toFixed(2))
-            : 0.0,
-        },
-      })
-    }
-
-    students.push({
-      student_id: studentId,
-      paper_id: 'EXAM_STRESS_TEST_01',
-      overall_paper_score: overallScore,
-      maximum_paper_marks: 25.0, // 5 questions × 5 max marks
-      question_results: questions,
-    })
-  }
-  return students
-}
-
 const INITIAL_MOCK_OUTPUT = generateStressTestData()
 
 // ── Sidebar Data ──────────────────────────────────────────────────────────────
@@ -82,9 +26,9 @@ const RECENT_PAPERS = [
   { id: 4, title: 'Data Structures Q2', subtitle: '5 questions · 40 pts'  },
 ]
 
-// ── Sidebar ───────────────────────────────────────────────────────────────────
-function Sidebar({ activeView, setActiveView, dashboardData, currentIndex, setCurrentIndex, onReset }) {
-  const pending = dashboardData.length - currentIndex
+// ── Sidebar ─────────────────────────────────────────────────────────────────────────────
+function Sidebar({ activeView, setActiveView, dashboardData, currentIndex, setCurrentIndex, onReset, approvedStudentIds }) {
+  const pending = dashboardData.length - approvedStudentIds.size
 
   const navItem = (view, icon, label, badge) => {
     const active = activeView === view
@@ -180,8 +124,8 @@ function Sidebar({ activeView, setActiveView, dashboardData, currentIndex, setCu
             </summary>
             <nav className="mt-0.5 space-y-0.5">
               {dashboardData.map((s, idx) => {
-                const isActive = idx === currentIndex
-                const isDone   = idx < currentIndex
+                const isActive   = idx === currentIndex
+                const isApproved = approvedStudentIds.has(s.student_id)
                 return (
                   <button
                     key={s.student_id}
@@ -195,8 +139,8 @@ function Sidebar({ activeView, setActiveView, dashboardData, currentIndex, setCu
                       }
                     `}
                   >
-                    <span className={`flex items-center justify-center w-5 h-5 rounded-full text-xs font-bold shrink-0 ${isDone ? 'bg-green-600/30 text-green-400' : isActive ? 'bg-blue-600/30 text-blue-300' : 'bg-slate-800 text-slate-500'}`}>
-                      {isDone ? '✓' : idx + 1}
+                    <span className={`flex items-center justify-center w-5 h-5 rounded-full text-xs font-bold shrink-0 ${isApproved ? 'bg-green-600/30 text-green-400' : isActive ? 'bg-blue-600/30 text-blue-300' : 'bg-slate-800 text-slate-500'}`}>
+                      {isApproved ? '✓' : idx + 1}
                     </span>
                     <span className="truncate font-medium">{s.student_id}</span>
                     {s.question_results?.some(q => q.plagiarism_flag) && (
@@ -271,6 +215,7 @@ function App() {
   const [dashboardData, setDashboardData]   = useState([])
   const [currentIndex, setCurrentIndex]     = useState(0)
   const [resetCounter, setResetCounter]     = useState(0)
+  const [approvedStudentIds, setApprovedStudentIds] = useState(new Set())
 
   // ── Mock streaming fallback ────────────────────────────────────────────────
   const runMockStream = useCallback(() => {
@@ -300,7 +245,14 @@ function App() {
     setProcessingLogs([])
     setDashboardData([])
     setCurrentIndex(0)
+    setApprovedStudentIds(new Set())
     setResetCounter(c => c + 1)  // forces RubricBuilder unmount+remount via key prop
+  }, [])
+
+  // ── Approve handler (ID-based, schema-safe) ───────────────────────────────────
+  const handleApprove = useCallback((studentId) => {
+    setApprovedStudentIds(prev => new Set([...prev, studentId]))
+    setCurrentIndex(i => i + 1)
   }, [])
 
   // ── Primary submission handler ────────────────────────────────────────────
@@ -346,6 +298,7 @@ function App() {
         currentIndex={currentIndex}
         setCurrentIndex={setCurrentIndex}
         onReset={handleReset}
+        approvedStudentIds={approvedStudentIds}
       />
 
       <main className="flex-1 ml-64 flex flex-col overflow-hidden">
@@ -372,6 +325,8 @@ function App() {
             setDashboardData={setDashboardData}
             currentIndex={currentIndex}
             setCurrentIndex={setCurrentIndex}
+            onApprove={handleApprove}
+            isApproved={dashboardData[currentIndex] ? approvedStudentIds.has(dashboardData[currentIndex].student_id) : false}
           />
         </div>
 

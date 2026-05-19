@@ -93,7 +93,7 @@ function LoadingView({ processingLogs }) {
 
 // ── Dashboard View ────────────────────────────────────────────────────────────
 
-function DashboardView({ dashboardData, setDashboardData, currentIndex, setCurrentIndex }) {
+function DashboardView({ dashboardData, setDashboardData, currentIndex, setCurrentIndex, onApprove, isApproved }) {
   const [openQ, setOpenQ] = useState({ 0: true })
   const overrideRef = useRef(null)
 
@@ -105,7 +105,7 @@ function DashboardView({ dashboardData, setDashboardData, currentIndex, setCurre
   const handleApprove = () => {
     if (allDone) return
     console.log('✅ [GradeOps] Grade APPROVED —', `Student: ${student.student_id}`, `| Score: ${student.overall_paper_score} / ${student.maximum_paper_marks}`)
-    setCurrentIndex(i => i + 1)
+    onApprove(student.student_id)  // delegates index increment + Set update to App.jsx
     setOpenQ({ 0: true })
   }
 
@@ -232,8 +232,8 @@ function DashboardView({ dashboardData, setDashboardData, currentIndex, setCurre
             </div>
           </div>
 
-          {/* ── Plagiarism Alert ── */}
-          {hasPlagiarism && (() => {
+          {/* ── Plagiarism Alert (hidden once approved) ── */}
+          {hasPlagiarism && !isApproved && (() => {
             const pq = student.question_results.find(q => q.plagiarism_flag)
             return (
               <div className="flex items-start gap-3 p-4 bg-red-950/50 border border-red-700/50 rounded-2xl">
@@ -407,7 +407,7 @@ function DashboardView({ dashboardData, setDashboardData, currentIndex, setCurre
 
 // ── Root Export ───────────────────────────────────────────────────────────────
 
-export default function ReviewDashboard({ isProcessing, processingLogs, dashboardData, setDashboardData, currentIndex, setCurrentIndex }) {
+export default function ReviewDashboard({ isProcessing, processingLogs, dashboardData, setDashboardData, currentIndex, setCurrentIndex, onApprove, isApproved }) {
   if (isProcessing) {
     return <LoadingView processingLogs={processingLogs} />
   }
@@ -438,6 +438,8 @@ export default function ReviewDashboard({ isProcessing, processingLogs, dashboar
       setDashboardData={setDashboardData}
       currentIndex={currentIndex}
       setCurrentIndex={setCurrentIndex}
+      onApprove={onApprove}
+      isApproved={isApproved}
     />
   )
 }
