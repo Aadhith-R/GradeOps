@@ -22,6 +22,7 @@ export const generateStressTestData = () => {
 
       questions.push({
         question_id:         `Q_${q}`,
+        question_text:       `Please explain the core concepts of topic ${q} and provide 2 supporting pieces of evidence from the material.`,
         score_awarded:       score,
         max_question_score:  5.0,
         grading_breakdown: [

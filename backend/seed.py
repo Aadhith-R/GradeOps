@@ -55,8 +55,8 @@ def build_rubric() -> dict:
 
 # ── 2. Seed Submissions ───────────────────────────────────────────────────────
 
-def build_submission(student_num: int) -> tuple[str, str, dict]:
-    """Returns (student_id, paper_id, evaluation_data) for one student."""
+def build_submission(student_num: int) -> dict:
+    """Returns a flat submission document matching PaperGradingResult schema."""
     student_id    = f"STU_{str(student_num).zfill(3)}"
     overall_score = 0
     question_results = []
@@ -112,13 +112,13 @@ def build_submission(student_num: int) -> tuple[str, str, dict]:
 
         overall_score += score
 
-    evaluation_data = {
+    return {
+        "student_id":          student_id,
+        "paper_id":            PAPER_ID,
         "overall_paper_score": float(overall_score),
         "maximum_paper_marks": MAX_PAPER_MARKS,
         "question_results":    question_results,
     }
-
-    return student_id, PAPER_ID, evaluation_data
 
 
 # ── Entrypoint ────────────────────────────────────────────────────────────────
@@ -137,9 +137,9 @@ def main():
     # --- Submissions ---
     print(f"\n[2/2] Inserting {NUM_STUDENTS} student submissions...")
     for i in range(1, NUM_STUDENTS + 1):
-        sid, pid, ev = build_submission(i)
-        doc_id = insert_grade(sid, pid, ev)
-        print(f"      ✓ {sid} inserted  →  _id: {doc_id}")
+        submission = build_submission(i)
+        doc_id = insert_grade(submission)
+        print(f"      ✓ {submission['student_id']} inserted  →  _id: {doc_id}")
 
     print("\n" + "=" * 60)
     print(f"Seed complete. {1} rubric + {NUM_STUDENTS} submissions written to MongoDB.")

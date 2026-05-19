@@ -1,0 +1,454 @@
+[
+  {
+    "student_id": "STU_001_PERFECT",
+    "paper_id": "EXAM_FINAL_01",
+    "overall_paper_score": 10.0,
+    "maximum_paper_marks": 10.0,
+    "question_results": [
+      {
+        "question_id": "Q_101",
+        "score_awarded": 5.0,
+        "max_question_score": 5.0,
+        "grading_breakdown": [
+          {
+            "criteria": "Mentions ATP production",
+            "points_awarded": 3.0,
+            "notes": "Clear mention of ATP synthesis."
+          },
+          {
+            "criteria": "Mentions energy powerhouse",
+            "points_awarded": 2.0,
+            "notes": "Identified as the powerhouse."
+          }
+        ],
+        "format_check_passed": true,
+        "justification": "Flawless explanation covering all essential metabolic pathways.",
+        "plagiarism_flag": false,
+        "plagiarism_details": {
+          "matched_with": [],
+          "similarity_score": 0.0
+        }
+      },
+      {
+        "question_id": "Q_102",
+        "score_awarded": 5.0,
+        "max_question_score": 5.0,
+        "grading_breakdown": [
+          {
+            "criteria": "Mentions sunlight conversion",
+            "points_awarded": 2.5,
+            "notes": "Excellent detail on photons."
+          },
+          {
+            "criteria": "Mentions glucose production",
+            "points_awarded": 2.5,
+            "notes": "Correctly linked to Calvin cycle."
+          }
+        ],
+        "format_check_passed": true,
+        "justification": "Comprehensive understanding demonstrated.",
+        "plagiarism_flag": false,
+        "plagiarism_details": {
+          "matched_with": [],
+          "similarity_score": 0.0
+        }
+      }
+    ]
+  },
+  {
+    "student_id": "STU_002_FAIL",
+    "paper_id": "EXAM_FINAL_01",
+    "overall_paper_score": 0.0,
+    "maximum_paper_marks": 10.0,
+    "question_results": [
+      {
+        "question_id": "Q_101",
+        "score_awarded": 0.0,
+        "max_question_score": 5.0,
+        "grading_breakdown": [
+          {
+            "criteria": "Mentions ATP production",
+            "points_awarded": 0.0,
+            "notes": "No mention of ATP."
+          },
+          {
+            "criteria": "Mentions energy powerhouse",
+            "points_awarded": 0.0,
+            "notes": "Completely missed the point."
+          }
+        ],
+        "format_check_passed": false,
+        "justification": "The student wrote about chloroplasts instead of mitochondria.",
+        "plagiarism_flag": false,
+        "plagiarism_details": {
+          "matched_with": [],
+          "similarity_score": 0.0
+        }
+      },
+      {
+        "question_id": "Q_102",
+        "score_awarded": 0.0,
+        "max_question_score": 5.0,
+        "grading_breakdown": [
+          {
+            "criteria": "Mentions sunlight conversion",
+            "points_awarded": 0.0,
+            "notes": "Blank answer."
+          },
+          {
+            "criteria": "Mentions glucose production",
+            "points_awarded": 0.0,
+            "notes": "Blank answer."
+          }
+        ],
+        "format_check_passed": false,
+        "justification": "Left blank.",
+        "plagiarism_flag": false,
+        "plagiarism_details": {
+          "matched_with": [],
+          "similarity_score": 0.0
+        }
+      }
+    ]
+  },
+  {
+    "student_id": "STU_003_FLAGGED",
+    "paper_id": "EXAM_FINAL_01",
+    "overall_paper_score": 0.0,
+    "maximum_paper_marks": 10.0,
+    "question_results": [
+      {
+        "question_id": "Q_101",
+        "score_awarded": 0.0,
+        "max_question_score": 5.0,
+        "grading_breakdown": [
+          {
+            "criteria": "Mentions ATP production",
+            "points_awarded": 3.0,
+            "notes": "Technically correct but copied."
+          },
+          {
+            "criteria": "Mentions energy powerhouse",
+            "points_awarded": 2.0,
+            "notes": "Technically correct but copied."
+          }
+        ],
+        "format_check_passed": true,
+        "justification": "Answer is a 1:1 match with Wikipedia. Score nullified.",
+        "plagiarism_flag": true,
+        "plagiarism_details": {
+          "matched_with": [
+            "https://en.wikipedia.org/wiki/Mitochondrion"
+          ],
+          "similarity_score": 0.98
+        }
+      },
+      {
+        "question_id": "Q_102",
+        "score_awarded": 2.5,
+        "max_question_score": 5.0,
+        "grading_breakdown": [
+          {
+            "criteria": "Mentions sunlight conversion",
+            "points_awarded": 2.5,
+            "notes": "Acceptable."
+          },
+          {
+            "criteria": "Mentions glucose production",
+            "points_awarded": 0.0,
+            "notes": "Missed entirely."
+          }
+        ],
+        "format_check_passed": true,
+        "justification": "Partial explanation provided, but heavily referenced external sites.",
+        "plagiarism_flag": true,
+        "plagiarism_details": {
+          "matched_with": [
+            "biology-forums.com"
+          ],
+          "similarity_score": 0.85
+        }
+      }
+    ]
+  },
+  {
+    "student_id": "STU_004_AVERAGE",
+    "paper_id": "EXAM_FINAL_01",
+    "overall_paper_score": 7.0,
+    "maximum_paper_marks": 10.0,
+    "question_results": [
+      {
+        "question_id": "Q_101",
+        "score_awarded": 2.0,
+        "max_question_score": 5.0,
+        "grading_breakdown": [
+          {
+            "criteria": "Mentions ATP production",
+            "points_awarded": 0.0,
+            "notes": "Auto-graded note."
+          },
+          {
+            "criteria": "Mentions energy powerhouse",
+            "points_awarded": 2.0,
+            "notes": "Auto-graded note."
+          }
+        ],
+        "format_check_passed": true,
+        "justification": "Good attempt with some missing details.",
+        "plagiarism_flag": false,
+        "plagiarism_details": {
+          "matched_with": [],
+          "similarity_score": 0.0
+        }
+      },
+      {
+        "question_id": "Q_102",
+        "score_awarded": 5.0,
+        "max_question_score": 5.0,
+        "grading_breakdown": [
+          {
+            "criteria": "Mentions sunlight conversion",
+            "points_awarded": 2.5,
+            "notes": "Auto-graded note."
+          },
+          {
+            "criteria": "Mentions glucose production",
+            "points_awarded": 2.5,
+            "notes": "Auto-graded note."
+          }
+        ],
+        "format_check_passed": true,
+        "justification": "Perfectly detailed.",
+        "plagiarism_flag": false,
+        "plagiarism_details": {
+          "matched_with": [],
+          "similarity_score": 0.0
+        }
+      }
+    ]
+  },
+  {
+    "student_id": "STU_005_AVERAGE",
+    "paper_id": "EXAM_FINAL_01",
+    "overall_paper_score": 7.0,
+    "maximum_paper_marks": 10.0,
+    "question_results": [
+      {
+        "question_id": "Q_101",
+        "score_awarded": 2.0,
+        "max_question_score": 5.0,
+        "grading_breakdown": [
+          {
+            "criteria": "Mentions ATP production",
+            "points_awarded": 0.0,
+            "notes": "Auto-graded note."
+          },
+          {
+            "criteria": "Mentions energy powerhouse",
+            "points_awarded": 2.0,
+            "notes": "Auto-graded note."
+          }
+        ],
+        "format_check_passed": true,
+        "justification": "Good attempt with some missing details.",
+        "plagiarism_flag": false,
+        "plagiarism_details": {
+          "matched_with": [],
+          "similarity_score": 0.0
+        }
+      },
+      {
+        "question_id": "Q_102",
+        "score_awarded": 5.0,
+        "max_question_score": 5.0,
+        "grading_breakdown": [
+          {
+            "criteria": "Mentions sunlight conversion",
+            "points_awarded": 2.5,
+            "notes": "Auto-graded note."
+          },
+          {
+            "criteria": "Mentions glucose production",
+            "points_awarded": 2.5,
+            "notes": "Auto-graded note."
+          }
+        ],
+        "format_check_passed": true,
+        "justification": "Perfectly detailed.",
+        "plagiarism_flag": false,
+        "plagiarism_details": {
+          "matched_with": [],
+          "similarity_score": 0.0
+        }
+      }
+    ]
+  },
+  {
+    "student_id": "STU_006_AVERAGE",
+    "paper_id": "EXAM_FINAL_01",
+    "overall_paper_score": 8.0,
+    "maximum_paper_marks": 10.0,
+    "question_results": [
+      {
+        "question_id": "Q_101",
+        "score_awarded": 3.0,
+        "max_question_score": 5.0,
+        "grading_breakdown": [
+          {
+            "criteria": "Mentions ATP production",
+            "points_awarded": 3.0,
+            "notes": "Auto-graded note."
+          },
+          {
+            "criteria": "Mentions energy powerhouse",
+            "points_awarded": 0.0,
+            "notes": "Auto-graded note."
+          }
+        ],
+        "format_check_passed": true,
+        "justification": "Good attempt with some missing details.",
+        "plagiarism_flag": false,
+        "plagiarism_details": {
+          "matched_with": [],
+          "similarity_score": 0.0
+        }
+      },
+      {
+        "question_id": "Q_102",
+        "score_awarded": 5.0,
+        "max_question_score": 5.0,
+        "grading_breakdown": [
+          {
+            "criteria": "Mentions sunlight conversion",
+            "points_awarded": 2.5,
+            "notes": "Auto-graded note."
+          },
+          {
+            "criteria": "Mentions glucose production",
+            "points_awarded": 2.5,
+            "notes": "Auto-graded note."
+          }
+        ],
+        "format_check_passed": true,
+        "justification": "Perfectly detailed.",
+        "plagiarism_flag": false,
+        "plagiarism_details": {
+          "matched_with": [],
+          "similarity_score": 0.0
+        }
+      }
+    ]
+  },
+  {
+    "student_id": "STU_007_AVERAGE",
+    "paper_id": "EXAM_FINAL_01",
+    "overall_paper_score": 7.5,
+    "maximum_paper_marks": 10.0,
+    "question_results": [
+      {
+        "question_id": "Q_101",
+        "score_awarded": 5.0,
+        "max_question_score": 5.0,
+        "grading_breakdown": [
+          {
+            "criteria": "Mentions ATP production",
+            "points_awarded": 3.0,
+            "notes": "Auto-graded note."
+          },
+          {
+            "criteria": "Mentions energy powerhouse",
+            "points_awarded": 2.0,
+            "notes": "Auto-graded note."
+          }
+        ],
+        "format_check_passed": true,
+        "justification": "Excellent answer.",
+        "plagiarism_flag": false,
+        "plagiarism_details": {
+          "matched_with": [],
+          "similarity_score": 0.0
+        }
+      },
+      {
+        "question_id": "Q_102",
+        "score_awarded": 2.5,
+        "max_question_score": 5.0,
+        "grading_breakdown": [
+          {
+            "criteria": "Mentions sunlight conversion",
+            "points_awarded": 2.5,
+            "notes": "Auto-graded note."
+          },
+          {
+            "criteria": "Mentions glucose production",
+            "points_awarded": 0.0,
+            "notes": "Auto-graded note."
+          }
+        ],
+        "format_check_passed": true,
+        "justification": "Partial understanding of the Calvin cycle.",
+        "plagiarism_flag": false,
+        "plagiarism_details": {
+          "matched_with": [],
+          "similarity_score": 0.0
+        }
+      }
+    ]
+  },
+  {
+    "student_id": "STU_008_AVERAGE",
+    "paper_id": "EXAM_FINAL_01",
+    "overall_paper_score": 7.5,
+    "maximum_paper_marks": 10.0,
+    "question_results": [
+      {
+        "question_id": "Q_101",
+        "score_awarded": 5.0,
+        "max_question_score": 5.0,
+        "grading_breakdown": [
+          {
+            "criteria": "Mentions ATP production",
+            "points_awarded": 3.0,
+            "notes": "Auto-graded note."
+          },
+          {
+            "criteria": "Mentions energy powerhouse",
+            "points_awarded": 2.0,
+            "notes": "Auto-graded note."
+          }
+        ],
+        "format_check_passed": true,
+        "justification": "Excellent answer.",
+        "plagiarism_flag": false,
+        "plagiarism_details": {
+          "matched_with": [],
+          "similarity_score": 0.0
+        }
+      },
+      {
+        "question_id": "Q_102",
+        "score_awarded": 2.5,
+        "max_question_score": 5.0,
+        "grading_breakdown": [
+          {
+            "criteria": "Mentions sunlight conversion",
+            "points_awarded": 2.5,
+            "notes": "Auto-graded note."
+          },
+          {
+            "criteria": "Mentions glucose production",
+            "points_awarded": 0.0,
+            "notes": "Auto-graded note."
+          }
+        ],
+        "format_check_passed": true,
+        "justification": "Partial understanding of the Calvin cycle.",
+        "plagiarism_flag": false,
+        "plagiarism_details": {
+          "matched_with": [],
+          "similarity_score": 0.0
+        }
+      }
+    ]
+  }
+]

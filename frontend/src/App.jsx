@@ -1,8 +1,7 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import './index.css'
 import RubricBuilder from './components/RubricBuilder'
 import ReviewDashboard from './components/ReviewDashboard'
-import { generateStressTestData } from './mockData'
 
 // ── Mock Pipeline Logs ────────────────────────────────────────────────────────
 const MOCK_LOGS = [
@@ -16,18 +15,10 @@ const MOCK_LOGS = [
   '[Status] ✓ Pipeline finished. Ready for TA review.',
 ]
 
-const INITIAL_MOCK_OUTPUT = generateStressTestData()
-
-// ── Sidebar Data ──────────────────────────────────────────────────────────────
-const RECENT_PAPERS = [
-  { id: 1, title: 'CS101 Midterm',      subtitle: '12 questions · 100 pts' },
-  { id: 2, title: 'Physics Lab 3',      subtitle: '8 questions · 60 pts'   },
-  { id: 3, title: 'Calculus Final',     subtitle: '20 questions · 200 pts' },
-  { id: 4, title: 'Data Structures Q2', subtitle: '5 questions · 40 pts'  },
-]
+const API_BASE = 'http://localhost:8000'
 
 // ── Sidebar ─────────────────────────────────────────────────────────────────────────────
-function Sidebar({ activeView, setActiveView, dashboardData, currentIndex, setCurrentIndex, onReset, approvedStudentIds }) {
+function Sidebar({ activeView, setActiveView, dashboardData, currentIndex, onStudentClick, onReset, approvedStudentIds, visitedStudentIds, recentPapers, onPaperClick }) {
   const pending = dashboardData.length - approvedStudentIds.size
 
   const navItem = (view, icon, label, badge) => {
@@ -126,11 +117,12 @@ function Sidebar({ activeView, setActiveView, dashboardData, currentIndex, setCu
               {dashboardData.map((s, idx) => {
                 const isActive   = idx === currentIndex
                 const isApproved = approvedStudentIds.has(s.student_id)
+                const isVisited  = visitedStudentIds.has(s.student_id)
                 return (
                   <button
                     key={s.student_id}
                     type="button"
-                    onClick={() => { setCurrentIndex(idx); setActiveView('dashboard') }}
+                    onClick={() => onStudentClick(idx, s.student_id)}
                     className={`
                       w-full text-left flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all
                       ${isActive
@@ -139,8 +131,13 @@ function Sidebar({ activeView, setActiveView, dashboardData, currentIndex, setCu
                       }
                     `}
                   >
-                    <span className={`flex items-center justify-center w-5 h-5 rounded-full text-xs font-bold shrink-0 ${isApproved ? 'bg-green-600/30 text-green-400' : isActive ? 'bg-blue-600/30 text-blue-300' : 'bg-slate-800 text-slate-500'}`}>
-                      {isApproved ? '✓' : idx + 1}
+                    <span className={`flex items-center justify-center w-5 h-5 rounded-full text-xs font-bold shrink-0 ${
+                        isApproved ? 'bg-green-600/30 text-green-400' 
+                      : isVisited  ? 'bg-slate-700/50 text-slate-400'
+                      : isActive   ? 'bg-blue-600/30 text-blue-300' 
+                      : 'bg-yellow-500/20 text-yellow-500 border border-yellow-500/30'
+                    }`}>
+                      {isApproved ? '\u2713' : isVisited ? '\u2022' : idx + 1}
                     </span>
                     <span className="truncate font-medium">{s.student_id}</span>
                     {s.question_results?.some(q => q.plagiarism_flag) && (
@@ -162,10 +159,14 @@ function Sidebar({ activeView, setActiveView, dashboardData, currentIndex, setCu
             </svg>
           </summary>
           <nav className="mt-0.5 space-y-0.5">
-            {RECENT_PAPERS.map(paper => (
+            {recentPapers.length === 0 && (
+              <p className="px-3 py-2 text-xs text-slate-600 italic">No rubrics found.</p>
+            )}
+            {recentPapers.map(paper => (
               <button
-                key={paper.id}
+                key={paper.paper_id || paper._id}
                 type="button"
+                onClick={() => onPaperClick(paper.paper_id)}
                 className="w-full text-left flex items-start gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-800/70 active:bg-slate-800 group transition-colors duration-100 border border-transparent"
               >
                 <svg className="w-4 h-4 mt-0.5 shrink-0 text-slate-600 group-hover:text-slate-400 transition-colors"
@@ -174,8 +175,8 @@ function Sidebar({ activeView, setActiveView, dashboardData, currentIndex, setCu
                     d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
                 <div className="min-w-0">
-                  <p className="text-sm text-slate-300 group-hover:text-white truncate transition-colors leading-tight">{paper.title}</p>
-                  <p className="text-xs text-slate-600 group-hover:text-slate-500 transition-colors mt-0.5">{paper.subtitle}</p>
+                  <p className="text-sm text-slate-300 group-hover:text-white truncate transition-colors leading-tight">{paper.paper_id}</p>
+                  <p className="text-xs text-slate-600 group-hover:text-slate-500 transition-colors mt-0.5">{paper.total_questions} questions · {paper.maximum_paper_marks} pts</p>
                 </div>
               </button>
             ))}
@@ -216,6 +217,40 @@ function App() {
   const [currentIndex, setCurrentIndex]     = useState(0)
   const [resetCounter, setResetCounter]     = useState(0)
   const [approvedStudentIds, setApprovedStudentIds] = useState(new Set())
+  const [visitedStudentIds, setVisitedStudentIds]   = useState(new Set())
+  const [recentPapers, setRecentPapers]             = useState([])
+  const [activePaperId, setActivePaperId]           = useState(null)
+
+  // Hydrate sidebar: fetch rubric metadata on mount
+  useEffect(() => {
+    fetch(`${API_BASE}/rubrics`)
+      .then(res => res.json())
+      .then(data => setRecentPapers(Array.isArray(data) ? data : []))
+      .catch(err => console.warn('Failed to fetch rubrics:', err))
+  }, [])
+
+  // Load grades for a specific paper (called from sidebar)
+  const fetchGradesForPaper = useCallback(async (paperId) => {
+    try {
+      const res = await fetch(`${API_BASE}/grades/${paperId}`)
+      if (!res.ok) throw new Error('Failed to fetch grades')
+      const data = await res.json()
+      setDashboardData(Array.isArray(data) ? data : [data])
+      setCurrentIndex(0)
+      setApprovedStudentIds(new Set())
+      setVisitedStudentIds(new Set())
+      setActivePaperId(paperId)
+      setActiveView('dashboard')
+    } catch (err) {
+      console.error('[GradeOps] Failed to load grades:', err)
+    }
+  }, [])
+
+  const handleStudentClick = useCallback((idx, studentId) => {
+    setCurrentIndex(idx)
+    setActiveView('dashboard')
+    setVisitedStudentIds(prev => new Set([...prev, studentId]))
+  }, [])
 
   // ── Mock streaming fallback ────────────────────────────────────────────────
   const runMockStream = useCallback(() => {
@@ -233,8 +268,7 @@ function App() {
     setTimeout(() => {
       clearInterval(iv)
       setIsProcessing(false)
-      // THIS is what was missing! Inject the dummy data into the dashboard.
-      setDashboardData(INITIAL_MOCK_OUTPUT)
+      // Mock stream animation complete — real API response already handled dashboardData
     }, 7000) 
   }, [])
 
@@ -246,6 +280,8 @@ function App() {
     setDashboardData([])
     setCurrentIndex(0)
     setApprovedStudentIds(new Set())
+    setVisitedStudentIds(new Set())
+    setActivePaperId(null)
     setResetCounter(c => c + 1)  // forces RubricBuilder unmount+remount via key prop
   }, [])
 
@@ -296,9 +332,12 @@ function App() {
         setActiveView={setActiveView}
         dashboardData={dashboardData}
         currentIndex={currentIndex}
-        setCurrentIndex={setCurrentIndex}
+        onStudentClick={handleStudentClick}
         onReset={handleReset}
         approvedStudentIds={approvedStudentIds}
+        visitedStudentIds={visitedStudentIds}
+        recentPapers={recentPapers}
+        onPaperClick={fetchGradesForPaper}
       />
 
       <main className="flex-1 ml-64 flex flex-col overflow-hidden">

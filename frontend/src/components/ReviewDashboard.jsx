@@ -111,22 +111,46 @@ function DashboardView({ dashboardData, setDashboardData, currentIndex, setCurre
 
   // Granular per-criteria score edit: recalculates question + overall totals reactively
   const handleCriteriaScoreChange = (studentId, questionId, criteriaIndex, newVal) => {
-    const newScore = Math.max(0, Number(newVal))
+    const clampedVal = Math.max(0, Number(newVal))
+
+    // Pre-compute the new question-level score for the API call
+    const student = dashboardData.find(s => s.student_id === studentId)
+    const question = student?.question_results.find(q => q.question_id === questionId)
+    const newQuestionScore = question
+      ? question.grading_breakdown.reduce((sum, row, ri) => {
+          const pts = ri === criteriaIndex
+            ? Math.min(clampedVal, row.max_points ?? Infinity)
+            : row.points_awarded
+          return sum + pts
+        }, 0)
+      : 0
+
+    // 1. Optimistic UI update (instant)
     setDashboardData(prev => prev.map(s => {
       if (s.student_id !== studentId) return s
       const updatedQuestions = s.question_results.map(q => {
         if (q.question_id !== questionId) return q
         const updatedBreakdown = q.grading_breakdown.map((row, ri) =>
           ri === criteriaIndex
-            ? { ...row, points_awarded: Math.min(newScore, row.max_points ?? Infinity) }
+            ? { ...row, points_awarded: Math.min(clampedVal, row.max_points ?? Infinity) }
             : row
         )
-        const newQuestionScore = updatedBreakdown.reduce((sum, r) => sum + r.points_awarded, 0)
         return { ...q, grading_breakdown: updatedBreakdown, score_awarded: newQuestionScore }
       })
       const newOverall = updatedQuestions.reduce((sum, q) => sum + q.score_awarded, 0)
       return { ...s, question_results: updatedQuestions, overall_paper_score: newOverall }
     }))
+
+    // 2. Persist override to backend (fire-and-forget with error logging)
+    fetch('http://localhost:8000/override-grade', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        student_id: studentId,
+        question_id: questionId,
+        new_score: newQuestionScore,
+      }),
+    }).catch(err => console.error('[GradeOps] Override API failed:', err))
   }
 
   // Keyboard shortcuts — deps include handleApprove/overrideRef to avoid stale closure
@@ -279,15 +303,14 @@ function DashboardView({ dashboardData, setDashboardData, currentIndex, setCurre
                       {i + 1}
                     </span>
                     <div className="text-left">
-                      <p className="text-sm font-semibold text-slate-200">{q.question_id}</p>
-                      {q.question_text && (
-                        <details className="mt-0.5" onClick={e => e.stopPropagation()}>
-                          <summary className="text-xs text-slate-600 hover:text-slate-400 cursor-pointer select-none list-none">
-                            ▶ View Original Question
-                          </summary>
-                          <p className="text-xs text-slate-400 mt-1 leading-relaxed max-w-xs pr-2">{q.question_text}</p>
-                        </details>
-                      )}
+                      <p className="text-sm font-semibold text-slate-200">
+                        {q.question_id}
+                        {q.question_text && (
+                          <span className="ml-2 font-normal text-slate-400 max-w-md truncate inline-block align-bottom">
+                            {q.question_text}
+                          </span>
+                        )}
+                      </p>
                       <div className="flex items-center gap-2 mt-0.5">
                         <span className="text-xs text-slate-500">
                           Score: <strong className="text-slate-300">{q.score_awarded}</strong>/{q.max_question_score}

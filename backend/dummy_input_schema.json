@@ -1,0 +1,59 @@
+{
+  "paper_id": "EXAM_FINAL_01",
+  "subject_domain": "STEM",
+  "total_questions": 2,
+  "maximum_paper_marks": 10.0,
+  "questions": [
+    {
+      "question_id": "Q_101",
+      "question_text": "Explain the role of the mitochondria in cellular respiration.",
+      "max_score": 5.0,
+      "evaluation_config": {
+        "answer_format": "keyword_based",
+        "sentence_formation_required": true,
+        "reference_source": "llm_derived"
+      },
+      "teacher_solution": {
+        "exact_answer": null,
+        "required_steps": []
+      },
+      "rubric": [
+        {
+          "criteria": "Mentions ATP production",
+          "points": 3.0
+        },
+        {
+          "criteria": "Mentions energy powerhouse",
+          "points": 2.0
+        }
+      ]
+    },
+    {
+      "question_id": "Q_102",
+      "question_text": "Describe the process of photosynthesis.",
+      "max_score": 5.0,
+      "evaluation_config": {
+        "answer_format": "long_form",
+        "sentence_formation_required": true,
+        "reference_source": "textbook"
+      },
+      "teacher_solution": {
+        "exact_answer": null,
+        "required_steps": [
+          "Light dependent reactions",
+          "Calvin cycle"
+        ]
+      },
+      "rubric": [
+        {
+          "criteria": "Mentions sunlight conversion",
+          "points": 2.5
+        },
+        {
+          "criteria": "Mentions glucose production",
+          "points": 2.5
+        }
+      ]
+    }
+  ]
+}

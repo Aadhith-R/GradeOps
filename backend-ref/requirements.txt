@@ -1,9 +1,7 @@
 fastapi
 uvicorn[standard]
-pymongo
-python-dotenv
 python-multipart
-PyMuPDF
+pydantic
 google-genai
-langgraph
-torch
+pymongo
+PyMuPDF
