@@ -7,6 +7,8 @@ The deprecated database.py module is no longer imported.
 
 import os
 import json
+import time
+import random
 import shutil
 import fitz  # PyMuPDF — converts PDF pages to images
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Request
@@ -255,6 +257,58 @@ async def grade_pdf_submission(
     insert_grade(result.model_dump())
 
     return result
+
+
+# ---------------------------------------------------------
+# DUMMY DATA GENERATOR
+# ---------------------------------------------------------
+@app.post("/generate-dummy")
+async def generate_dummy():
+    """Generates a mock rubric + 15 graded submissions with a dynamic paper_id."""
+    paper_id = f"EXAM_{int(time.time())}"
+    n_stu, n_q, max_q = 15, 5, 5.0
+    max_marks = n_q * max_q
+
+    questions = []
+    for q in range(1, n_q + 1):
+        questions.append({
+            "question_id": f"Q_{q}",
+            "question_text": f"Question {q}: Explain the key concepts.",
+            "max_score": max_q,
+            "evaluation_config": {"answer_format": "keyword", "sentence_formation_required": False, "reference_source": ""},
+            "rubric_conditions": [
+                {"criteria": f"Addresses core concept for Q{q}", "points": 3.0},
+                {"criteria": "Provides supporting evidence", "points": 2.0},
+            ],
+            "teacher_solution": {"exact_answer": None, "required_steps": []},
+        })
+    insert_rubric({"paper_id": paper_id, "subject_domain": "General", "total_questions": n_q, "maximum_paper_marks": max_marks, "questions": questions})
+
+    for i in range(1, n_stu + 1):
+        sid = f"STU_{str(i).zfill(3)}"
+        total = 0
+        qr = []
+        for q in range(1, n_q + 1):
+            sc = random.randint(0, int(max_q))
+            plag = random.random() > 0.85
+            qr.append({
+                "question_id": f"Q_{q}", "score_awarded": float(sc), "max_question_score": max_q,
+                "grading_breakdown": [
+                    {"criteria": f"Core concept Q{q}", "points_awarded": min(sc, 3.0), "notes": "Good." if sc >= 3 else "Missed details."},
+                    {"criteria": "Supporting evidence", "points_awarded": max(0, sc - 3.0), "notes": "Solid." if sc == 5 else "Needs elaboration."},
+                ],
+                "format_check_passed": sc > 2,
+                "justification": "Flawless." if sc == 5 else "Needs review on secondary concepts.",
+                "plagiarism_flag": plag,
+                "plagiarism_details": {
+                    "matched_with": [f"STU_{str(random.randint(1, n_stu)).zfill(3)}"] if plag else [],
+                    "similarity_score": round(0.85 + random.random() * 0.1, 2) if plag else 0.0,
+                },
+            })
+            total += sc
+        insert_grade({"student_id": sid, "paper_id": paper_id, "overall_paper_score": float(total), "maximum_paper_marks": max_marks, "question_results": qr})
+
+    return {"status": "success", "paper_id": paper_id, "students_generated": n_stu}
 
 
 if __name__ == "__main__":

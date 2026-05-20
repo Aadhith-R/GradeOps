@@ -591,16 +591,19 @@ export default function RubricBuilder({ onSubmit, isProcessing }) {
   const updateQuestion = (id, fn) => setQuestions(p => p.map(q => q.id === id ? fn(q) : q))
 
   const buildSchema = () => ({
-    paper_id:             paperId.trim() || null,
+    paper_id:             paperId.trim() || 'PAPER-001',
     subject_domain:       domain,
     total_questions:      totalQ,
     maximum_paper_marks:  maxMarks,
     questions: questions.map(q => ({
-      question_id:       q.question_id.trim() || null,
-      question_text:     q.question_text.trim() || null,
+      question_id:       q.question_id.trim() || `Q-${Math.random().toString(36).slice(2,6).toUpperCase()}`,
+      question_text:     q.question_text.trim() || 'No question text provided',
       max_score:         Number(q.max_score) || 0,
-      question_type:     PRESETS[q.question_type].label,
-      evaluation_config: { ...q.evaluation_config },
+      evaluation_config: {
+        answer_format:                q.evaluation_config.answer_format,
+        sentence_formation_required:  q.evaluation_config.sentence_formation_required,
+        reference_source:             '',
+      },
       rubric:            q.conditions
                           .filter(c => c.criteria.trim())
                           .map(c => ({ criteria: c.criteria.trim(), points: Number(c.points) || 0 })),

@@ -115,9 +115,9 @@ function Sidebar({ activeView, setActiveView, dashboardData, currentIndex, onStu
             </summary>
             <nav className="mt-0.5 space-y-0.5">
               {dashboardData.map((s, idx) => {
-                const isActive   = idx === currentIndex
+                const isActive = idx === currentIndex
                 const isApproved = approvedStudentIds.has(s.student_id)
-                const isVisited  = visitedStudentIds.has(s.student_id)
+                const isVisited = visitedStudentIds.has(s.student_id)
                 return (
                   <button
                     key={s.student_id}
@@ -131,12 +131,11 @@ function Sidebar({ activeView, setActiveView, dashboardData, currentIndex, onStu
                       }
                     `}
                   >
-                    <span className={`flex items-center justify-center w-5 h-5 rounded-full text-xs font-bold shrink-0 ${
-                        isApproved ? 'bg-green-600/30 text-green-400' 
-                      : isVisited  ? 'bg-slate-700/50 text-slate-400'
-                      : isActive   ? 'bg-blue-600/30 text-blue-300' 
-                      : 'bg-yellow-500/20 text-yellow-500 border border-yellow-500/30'
-                    }`}>
+                    <span className={`flex items-center justify-center w-5 h-5 rounded-full text-xs font-bold shrink-0 ${isApproved ? 'bg-green-600/30 text-green-400'
+                      : isVisited ? 'bg-slate-700/50 text-slate-400'
+                        : isActive ? 'bg-blue-600/30 text-blue-300'
+                          : 'bg-yellow-500/20 text-yellow-500 border border-yellow-500/30'
+                      }`}>
                       {isApproved ? '\u2713' : isVisited ? '\u2022' : idx + 1}
                     </span>
                     <span className="truncate font-medium">{s.student_id}</span>
@@ -210,16 +209,16 @@ function Sidebar({ activeView, setActiveView, dashboardData, currentIndex, onStu
 
 // ── App ───────────────────────────────────────────────────────────────────────
 function App() {
-  const [activeView, setActiveView]         = useState('builder')
-  const [isProcessing, setIsProcessing]     = useState(false)
+  const [activeView, setActiveView] = useState('builder')
+  const [isProcessing, setIsProcessing] = useState(false)
   const [processingLogs, setProcessingLogs] = useState([])
-  const [dashboardData, setDashboardData]   = useState([])
-  const [currentIndex, setCurrentIndex]     = useState(0)
-  const [resetCounter, setResetCounter]     = useState(0)
+  const [dashboardData, setDashboardData] = useState([])
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const [resetCounter, setResetCounter] = useState(0)
   const [approvedStudentIds, setApprovedStudentIds] = useState(new Set())
-  const [visitedStudentIds, setVisitedStudentIds]   = useState(new Set())
-  const [recentPapers, setRecentPapers]             = useState([])
-  const [activePaperId, setActivePaperId]           = useState(null)
+  const [visitedStudentIds, setVisitedStudentIds] = useState(new Set())
+  const [recentPapers, setRecentPapers] = useState([])
+  const [activePaperId, setActivePaperId] = useState(null)
 
   // Hydrate sidebar: fetch rubric metadata on mount
   useEffect(() => {
@@ -263,27 +262,35 @@ function App() {
       })
       idx++
       if (idx >= MOCK_LOGS.length) clearInterval(iv)
-    }, 800) 
+    }, 800)
 
     setTimeout(() => {
       clearInterval(iv)
       setIsProcessing(false)
       // Mock stream animation complete — real API response already handled dashboardData
-    }, 7000) 
+    }, 7000)
   }, [])
 
-  // ── Global reset handler ───────────────────────────────────────────────────
-  const handleReset = useCallback(() => {
-    setActiveView('builder')
-    setIsProcessing(false)
-    setProcessingLogs([])
-    setDashboardData([])
-    setCurrentIndex(0)
-    setApprovedStudentIds(new Set())
-    setVisitedStudentIds(new Set())
-    setActivePaperId(null)
-    setResetCounter(c => c + 1)  // forces RubricBuilder unmount+remount via key prop
-  }, [])
+  // ── "New Paper" handler — generates dummy data via backend ──────────────────
+  const handleNewPaper = useCallback(async () => {
+    try {
+      const res = await fetch(`${API_BASE}/generate-dummy`, { method: 'POST' })
+      if (!res.ok) throw new Error('generate-dummy failed')
+      const { paper_id } = await res.json()
+
+      // Refresh sidebar with new rubric list
+      const rubRes = await fetch(`${API_BASE}/rubrics`)
+      if (rubRes.ok) {
+        const rubrics = await rubRes.json()
+        setRecentPapers(Array.isArray(rubrics) ? rubrics : [])
+      }
+
+      // Load the new paper's grades into the dashboard
+      await fetchGradesForPaper(paper_id)
+    } catch (err) {
+      console.error('[GradeOps] New paper generation failed:', err)
+    }
+  }, [fetchGradesForPaper])
 
   // ── Approve handler (ID-based, schema-safe) ───────────────────────────────────
   const handleApprove = useCallback((studentId) => {
@@ -312,7 +319,7 @@ function App() {
         body: formData,
         // NOTE: Do NOT set Content-Type — browser must set multipart boundary
       })
-      
+
       if (!res.ok) throw new Error("Backend connection failed")
 
       const data = await res.json()
@@ -333,7 +340,7 @@ function App() {
         dashboardData={dashboardData}
         currentIndex={currentIndex}
         onStudentClick={handleStudentClick}
-        onReset={handleReset}
+        onReset={handleNewPaper}
         approvedStudentIds={approvedStudentIds}
         visitedStudentIds={visitedStudentIds}
         recentPapers={recentPapers}
